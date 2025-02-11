@@ -322,3 +322,28 @@ class IncrementalPCA:
             start = end
         if start < n:
             yield slice(start, n)
+
+    def inverse_transform(self, X) -> torch.Tensor:
+        """
+        Transform data back to its original space from the projected space.
+        
+        Args:
+            X (torch.Tensor): Data tensor in transformed space with shape (n_samples, n_components).
+            
+        Returns:
+            torch.Tensor: Data tensor back in original space with shape (n_samples, n_features).
+        """
+        # Validate input
+        if not isinstance(X, torch.Tensor):
+            X = torch.tensor(X, dtype=torch.float32)
+        
+        # Check shape compatibility
+        if X.shape[1] != self.components_.shape[0]:
+            raise ValueError(
+                f"Shape of input {X.shape} does not match number of components "
+                f"({self.components_.shape[0]})"
+            )
+        
+        # Project data back to original space and add the mean
+        X_transformed = torch.mm(X.double(), self.components_).to(X.dtype)
+        return X_transformed + self.mean_
